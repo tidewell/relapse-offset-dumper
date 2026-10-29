@@ -112,8 +112,9 @@ logmsg(FILE *fp, const char *fmt, ...)
 {
     va_list ap;
     char prefix[32];
+    unsigned long ms = elapsed_ms();
     snprintf(prefix, sizeof(prefix), "[%lu.%03lus] ",
-             elapsed_ms() / 1000, elapsed_ms() % 1000);
+             ms / 1000, ms % 1000);
 
     /* write to report */
     va_start(ap, fmt);
@@ -139,8 +140,9 @@ logerr(FILE *fp, const char *fmt, ...)
 {
     va_list ap;
     char prefix[32];
+    unsigned long ms = elapsed_ms();
     snprintf(prefix, sizeof(prefix), "[%lu.%03lus] ERROR: ",
-             elapsed_ms() / 1000, elapsed_ms() % 1000);
+             ms / 1000, ms % 1000);
 
     va_start(ap, fmt);
     fputs(prefix, fp);
@@ -181,12 +183,13 @@ clean_old_dumps(void)
     if (!d) return;
 
     struct dirent *ent;
+    struct stat st;
     char path[512];
     int removed = 0;
     while ((ent = readdir(d)) != NULL) {
         if (ent->d_name[0] == '.') continue;
         snprintf(path, sizeof(path), "%s/%s", OUT_DIR, ent->d_name);
-        if (unlink(path) == 0)
+        if (stat(path, &st) == 0 && S_ISREG(st.st_mode) && unlink(path) == 0)
             removed++;
     }
     closedir(d);
